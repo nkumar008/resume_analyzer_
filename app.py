@@ -1,0 +1,142 @@
+from dotenv import load_dotenv
+load_dotenv()
+
+import base64
+import streamlit as st
+import io
+import os
+from openai import OpenAI
+
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+
+
+def get_openai_response(input, pdf_content, prompt):
+
+    response = client.responses.create(
+        model="gpt-5.6-luna",
+        instructions=prompt,
+        input=[
+            {
+                "role": "user",
+                "content": [
+                    {
+                        "type": "input_text",
+                        "text": input
+                    },
+                    {
+                        "type": "input_file",
+                        "filename": "resume.pdf",
+                        "file_data": pdf_content
+                    }
+                ]
+            }
+        ]
+    )
+
+    return response.output_text
+
+
+def input_pdf_setup(uploaded_file):
+
+    if uploaded_file is not None:
+
+        pdf_bytes = uploaded_file.read()
+
+        pdf_base64 = base64.b64encode(pdf_bytes).decode("utf-8")
+
+        pdf_data = f"data:application/pdf;base64,{pdf_base64}"
+
+        return pdf_data
+
+    else:
+        raise FileNotFoundError("No file uploaded")
+
+
+st.set_page_config(page_title="ATS RESUME EXPERT")
+
+st.header("ATS Tracking System")
+
+input_text = st.text_area("JOB Description", key="input")
+
+uploaded_file = st.file_uploader(
+    "Upload your resume(PDF)",
+    type=['pdf']
+)
+
+if uploaded_file is not None:
+    st.write("PDF Uploaded Successfully")
+
+
+submit1 = st.button("Tell me about the resume")
+
+submit2 = st.button("How can I Improvise my Skills")
+
+#submit3 = st.button("presentage match")
+
+
+input_prompt1 = """
+You are an experienced Technical Human Resource Manager,
+your task is to review the provided resume against the job description.
+
+Please share your professional evaluation on whether the candidate's
+profile aligns with the role.
+
+Highlight the strengths and weaknesses of the applicant in relation
+to the specified job requirements.
+"""
+
+
+input_prompt3 = """
+You are an skilled ATS (Applicant Tracking System) scanner with a deep
+understanding of data science and ATS functionality.
+
+Your task is to evaluate the resume against the provided job description.
+
+Give me the percentage of match if the resume matches the job description.
+
+First the output should come as percentage,
+then keywords missing,
+and last final thoughts.
+"""
+
+
+if submit1:
+
+    if uploaded_file is not None:
+
+        pdf_content = input_pdf_setup(uploaded_file)
+
+        response = get_openai_response(
+            input_prompt1,
+            pdf_content,
+            input_text
+        )
+
+        st.subheader("The Response is ")
+
+        st.write(response)
+
+    else:
+
+        st.write("Please Upload the resume")
+
+
+if submit2:
+
+    if uploaded_file is not None:
+
+        pdf_content = input_pdf_setup(uploaded_file)
+
+        response = get_openai_response(
+            input_prompt3,
+            pdf_content,
+            input_text
+        )
+
+        st.subheader("The Response is ")
+
+        st.write(response)
+
+    else:
+
+        st.write("Please Upload the resume")
