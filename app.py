@@ -7,8 +7,7 @@ import io
 import os
 from openai import OpenAI
 
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-
+client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
 
 def get_openai_response(input, pdf_content, prompt):
 
